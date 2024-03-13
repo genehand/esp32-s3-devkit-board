@@ -126,11 +126,6 @@ int8_t get_pa_enable_gpio(void)
     return PA_ENABLE_GPIO;
 }
 
-int8_t get_es7243_mclk_gpio(void)
-{
-    return GPIO_NUM_2;
-}
-
 // adc button id
 
 int8_t get_input_rec_id(void)
@@ -171,11 +166,6 @@ int8_t get_green_led_gpio(void)
 }
 
 int8_t get_blue_led_gpio(void)
-{
-    return -1;
-}
-
-int8_t get_es8311_mclk_src(void)
 {
     return -1;
 }
