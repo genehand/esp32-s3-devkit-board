@@ -26,11 +26,10 @@
 #define _AUDIO_BOARD_H_
 
 #include "audio_hal.h"
+#include "audio_volume.h"
 #include "board_def.h"
 #include "board_pins_config.h"
 #include "esp_peripherals.h"
-#include "display_service.h"
-#include "periph_sdcard.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +40,7 @@ extern "C" {
  */
 struct audio_board_handle {
     audio_hal_handle_t audio_hal; /*!< audio hardware abstract layer handle */
+    audio_hal_handle_t adc_hal;   /*!< adc hardware abstract layer handle */
 };
 
 typedef struct audio_board_handle *audio_board_handle_t;
@@ -60,22 +60,35 @@ audio_board_handle_t audio_board_init(void);
 audio_hal_handle_t audio_board_codec_init(void);
 
 /**
- * @brief Initialize led peripheral and display service
+ * @brief Initialize adc
  *
- * @return The audio display service handle
+ * @return The adc hal handle
  */
-display_service_handle_t audio_board_led_init(void);
+audio_hal_handle_t audio_board_adc_init(void);
 
 /**
- * @brief Initialize sdcard peripheral
+ * @brief Set volume
  *
- * @param set The handle of esp_periph_set_handle_t
+ * @param board_handle The handle of the audio board
+ * @param volume       The volume value (0-100)
  *
  * @return
  *     - ESP_OK, success
  *     - Others, fail
  */
-esp_err_t audio_board_sdcard_init(esp_periph_set_handle_t set, periph_sdcard_mode_t mode);
+esp_err_t audio_board_set_volume(audio_board_handle_t board_handle, int volume);
+
+/**
+ * @brief Get volume
+ *
+ * @param board_handle The handle of the audio board
+ * @param volume       Pointer to store the volume value
+ *
+ * @return
+ *     - ESP_OK, success
+ *     - Others, fail
+ */
+esp_err_t audio_board_get_volume(audio_board_handle_t board_handle, int *volume);
 
 /**
  * @brief Initialize key peripheral
@@ -104,20 +117,6 @@ audio_board_handle_t audio_board_get_handle(void);
  *          others  fail
  */
 esp_err_t audio_board_deinit(audio_board_handle_t audio_board);
-
-/**
- * @brief Get the ws2812 gpio pin
- *
- * @return  GPIO pin
- */
-int8_t get_ws2812_gpio_pin(void);
-
-/**
- * @brief Get the number of ws2812
- *
- * @return  number of ws2812
- */
-int get_ws2812_num(void);
 
 #ifdef __cplusplus
 }

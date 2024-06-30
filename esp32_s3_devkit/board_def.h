@@ -25,6 +25,7 @@
 #ifndef _AUDIO_BOARD_DEFINITION_H_
 #define _AUDIO_BOARD_DEFINITION_H_
 
+// clang-format off
 /**
  * @brief SDCARD Function Definition
  *        PMOD2 for one line sdcard
@@ -45,19 +46,19 @@
 #define ESP_SD_PIN_CD               -1
 #define ESP_SD_PIN_WP               -1
 
-
 /**
  * @brief Audio Codec Chip Function Definition
  */
 #define FUNC_AUDIO_CODEC_EN         (1)
 #define PA_ENABLE_GPIO              GPIO_NUM_6
-#define HEADPHONE_DETECT            -1
+#define HEADPHONE_DETECT            (-1)
 #define CODEC_ADC_I2S_PORT          (0)
 #define CODEC_ADC_BITS_PER_SAMPLE   I2S_BITS_PER_SAMPLE_16BIT
 #define CODEC_ADC_SAMPLE_RATE       (48000)
 #define RECORD_HARDWARE_AEC         (false)
 #define BOARD_PA_GAIN               (0) /* Power amplifier gain defined by board (dB) */
 
+extern audio_hal_func_t AUDIO_CODEC_PCM5102_DEFAULT_HANDLE;
 extern audio_hal_func_t AUDIO_CODEC_ICS43434_DEFAULT_HANDLE;
 #define AUDIO_CODEC_DEFAULT_CONFIG(){                   \
         .adc_input  = AUDIO_HAL_ADC_INPUT_LINE1,        \
@@ -65,7 +66,7 @@ extern audio_hal_func_t AUDIO_CODEC_ICS43434_DEFAULT_HANDLE;
         .codec_mode = AUDIO_HAL_CODEC_MODE_BOTH,        \
         .i2s_iface = {                                  \
             .mode = AUDIO_HAL_MODE_SLAVE,               \
-            .fmt = AUDIO_HAL_I2S_NORMAL,                  \
+            .fmt = AUDIO_HAL_I2S_NORMAL,                \
             .samples = AUDIO_HAL_48K_SAMPLES,           \
             .bits = AUDIO_HAL_BIT_LENGTH_16BITS,        \
         },                                              \
@@ -75,31 +76,21 @@ extern audio_hal_func_t AUDIO_CODEC_ICS43434_DEFAULT_HANDLE;
 /**
  * @brief Button Function Definition
  */
-#define FUNC_BUTTON_EN              (0)
-#define INPUT_KEY_NUM               3
-#define BUTTON_VOLUP_ID             0
-#define BUTTON_VOLDOWN_ID           1
-#define BUTTON_SET_ID               2
-#define BUTTON_PLAY_ID              3
-#define BUTTON_MODE_ID              4
-#define BUTTON_REC_ID               5
+#define FUNC_BUTTON_EN              (1)
+#define INPUT_KEY_NUM               (2)
+#define BUTTON_VOLUP_ID             (-1)
+#define BUTTON_VOLDOWN_ID           (-1)
+#define BUTTON_SET_ID               (-1)
+#define BUTTON_PLAY_ID              (0)
+#define BUTTON_MODE_ID              (-1)
+#define BUTTON_REC_ID               (-1)
 
-#define INPUT_KEY_DEFAULT_INFO() {                      \
-    {                                                   \
-        .type = PERIPH_ID_ADC_BTN,                      \
-        .user_id = INPUT_KEY_USER_ID_SET,               \
-        .act_id = BUTTON_SET_ID,                        \
-    },                                                  \
-    {                                                   \
-        .type = PERIPH_ID_ADC_BTN,                      \
-        .user_id = INPUT_KEY_USER_ID_VOLUP,             \
-        .act_id = BUTTON_VOLUP_ID,                      \
-    },                                                  \
-    {                                                   \
-        .type = PERIPH_ID_ADC_BTN,                      \
-        .user_id = INPUT_KEY_USER_ID_VOLDOWN,           \
-        .act_id = BUTTON_VOLDOWN_ID,                    \
-    }                                                   \
+#define INPUT_KEY_DEFAULT_INFO() {                     \
+    {                                                  \
+        .type = PERIPH_ID_BUTTON,                      \
+        .user_id = INPUT_KEY_USER_ID_PLAY,             \
+        .act_id = BUTTON_PLAY_ID,                      \
+    }                                                  \
 }
-
 #endif
+// clang-format on

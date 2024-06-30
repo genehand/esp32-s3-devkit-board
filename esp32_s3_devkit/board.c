@@ -23,87 +23,76 @@
  */
 
 #include "esp_log.h"
-#include "board.h"
+
 #include "audio_mem.h"
-#include "periph_adc_button.h"
-#include "led_bar_ws2812.h"
-#include "display_service.h"
+#include "audio_volume.h"
+#include "periph_button.h"
+#include "board.h"
 
 static const char *TAG = "AUDIO_BOARD";
 
-static audio_board_handle_t board_handle = NULL;
+static audio_board_handle_t board_handle = 0;
 
-audio_board_handle_t audio_board_init(void)
-{
+audio_board_handle_t audio_board_init(void) {
     if (board_handle) {
         ESP_LOGW(TAG, "The board has already been initialized!");
         return board_handle;
     }
-    audio_hal_codec_config_t audio_codec_cfg = AUDIO_CODEC_DEFAULT_CONFIG();
     board_handle = (audio_board_handle_t) audio_calloc(1, sizeof(struct audio_board_handle));
     AUDIO_MEM_CHECK(TAG, board_handle, return NULL);
-
-    board_handle->audio_hal = audio_hal_init(&audio_codec_cfg, &AUDIO_CODEC_ICS43434_DEFAULT_HANDLE);
+    board_handle->audio_hal = audio_board_codec_init();
+    board_handle->adc_hal = audio_board_adc_init();
     return board_handle;
 }
 
-esp_err_t audio_board_sdcard_init(esp_periph_set_handle_t set, periph_sdcard_mode_t mode)
-{
-    esp_err_t ret = ESP_FAIL;
-    return ret;
+audio_hal_handle_t audio_board_adc_init(void) {
+  audio_hal_codec_config_t audio_codec_cfg = AUDIO_CODEC_DEFAULT_CONFIG();
+  audio_hal_handle_t adc_hal = NULL;
+  adc_hal = audio_hal_init(&audio_codec_cfg, &AUDIO_CODEC_ICS43434_DEFAULT_HANDLE);
+  AUDIO_NULL_CHECK(TAG, adc_hal, return NULL);
+  return adc_hal;
 }
 
-display_service_handle_t audio_board_led_init(void)
-{
-    led_bar_ws2812_handle_t led = led_bar_ws2812_init(get_ws2812_gpio_pin(), get_ws2812_num());
-    AUDIO_NULL_CHECK(TAG, led, return NULL);
-    display_service_config_t display = {
-        .based_cfg = {
-            .task_stack = 0,
-            .task_prio  = 0,
-            .task_core  = 0,
-            .task_func  = NULL,
-            .service_start = NULL,
-            .service_stop = NULL,
-            .service_destroy = NULL,
-            .service_ioctl = led_bar_ws2812_pattern,
-            .service_name = "DISPLAY_serv",
-            .user_data = NULL,
-        },
-        .instance = led,
-    };
-
-    return display_service_create(&display);
+audio_hal_handle_t audio_board_codec_init(void) {
+  audio_hal_codec_config_t audio_codec_cfg = AUDIO_CODEC_DEFAULT_CONFIG();
+  audio_hal_handle_t codec_hal = audio_hal_init(&audio_codec_cfg, &AUDIO_CODEC_PCM5102_DEFAULT_HANDLE);
+  AUDIO_NULL_CHECK(TAG, codec_hal, return NULL);
+  return codec_hal;
 }
 
-esp_err_t audio_board_key_init(esp_periph_set_handle_t set)
-{
-    esp_err_t ret = ESP_OK;
-    periph_adc_button_cfg_t adc_btn_cfg = PERIPH_ADC_BUTTON_DEFAULT_CONFIG();
-    adc_arr_t adc_btn_tag = ADC_DEFAULT_ARR();
-    adc_btn_tag.adc_ch = ADC1_CHANNEL_2;
-    adc_btn_tag.total_steps = 6;
-    int btn_array[7] = {380, 820, 1100, 1650, 1980, 2410, 2700};
-    adc_btn_tag.adc_level_step = (int *)(&btn_array);
-    adc_btn_cfg.arr = &adc_btn_tag;
-    adc_btn_cfg.arr_size = 1;
-    esp_periph_handle_t adc_btn_handle = periph_adc_button_init(&adc_btn_cfg);
-    AUDIO_NULL_CHECK(TAG, adc_btn_handle, return ESP_ERR_ADF_MEMORY_LACK);
-    ret = esp_periph_start(set, adc_btn_handle);
-    return ret;
+esp_err_t audio_board_set_volume(audio_board_handle_t board_handle, int volume) {
+  if (!board_handle || !board_handle->audio_hal) {
+    ESP_LOGE(TAG, "Invalid board or audio HAL handle");
+    return ESP_FAIL;
+  }
+  return audio_hal_set_volume(board_handle->audio_hal, volume);
 }
 
-audio_board_handle_t audio_board_get_handle(void)
-{
-    return board_handle;
+esp_err_t audio_board_get_volume(audio_board_handle_t board_handle, int *volume) {
+  if (!board_handle || !board_handle->audio_hal || !volume) {
+    ESP_LOGE(TAG, "Invalid board or audio HAL handle, or null volume pointer");
+    return ESP_FAIL;
+  }
+  return audio_hal_get_volume(board_handle->audio_hal, volume);
 }
 
-esp_err_t audio_board_deinit(audio_board_handle_t audio_board)
-{
-    esp_err_t ret = ESP_OK;
-    ret = audio_hal_deinit(audio_board->audio_hal);
-    audio_board->audio_hal = NULL;
-    audio_free(audio_board);
-    board_handle = NULL;
-    return ret;
+esp_err_t audio_board_key_init(esp_periph_set_handle_t set) {
+  periph_button_cfg_t btn_cfg = {
+      .gpio_mask = (1ULL << get_input_play_id()),  // PLAY BTN
+  };
+  esp_periph_handle_t button_handle = periph_button_init(&btn_cfg);
+  AUDIO_NULL_CHECK(TAG, button_handle, return ESP_ERR_ADF_MEMORY_LACK);
+  return esp_periph_start(set, button_handle);
+}
+
+audio_board_handle_t audio_board_get_handle(void) { return board_handle; }
+
+esp_err_t audio_board_deinit(audio_board_handle_t audio_board) {
+  AUDIO_NULL_CHECK(TAG, audio_board, return ESP_FAIL);
+  esp_err_t ret = ESP_OK;
+  ret |= audio_hal_deinit(audio_board->audio_hal);
+  ret |= audio_hal_deinit(audio_board->adc_hal);
+  audio_free(audio_board);
+  board_handle = NULL;
+  return ret;
 }

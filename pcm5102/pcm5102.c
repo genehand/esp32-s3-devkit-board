@@ -1,7 +1,7 @@
 /*
  * ESPRESSIF MIT License
  *
- * Copyright (c) 2019 <ESPRESSIF SYSTEMS (SHANGHAI) CO., LTD>
+ * Copyright (c) 2020 <ESPRESSIF SYSTEMS (SHANGHAI) CO., LTD>
  *
  * Permission is hereby granted for use on all ESPRESSIF SYSTEMS products, in which case,
  * it is free of charge, to any person obtaining a copy of this software and associated
@@ -23,58 +23,62 @@
  */
 
 #include <string.h>
-#include "board.h"
 #include "esp_log.h"
+#include "board.h"
 
-#include "ics43434.h"
+#include "pcm5102.h"
 
-#define ES_ASSERT(a, format, b, ...) \
-    if ((a) != 0) { \
-        ESP_LOGE(TAG, format, ##__VA_ARGS__); \
-        return b;\
-    }
+static const char *TAG = "PCM5102";
 
-static char *TAG = "DRV43434";
+static bool codec_init_flag;
 
-audio_hal_func_t AUDIO_CODEC_ICS43434_DEFAULT_HANDLE = {
-    .audio_codec_initialize = ics43434_adc_init,
-    .audio_codec_deinitialize = ics43434_adc_deinit,
-    .audio_codec_ctrl = ics43434_adc_ctrl_state,
-    .audio_codec_config_iface = ics43434_adc_config_i2s,
-    .audio_codec_set_mute = NULL,
-    .audio_codec_set_volume = ics43434_adc_set_voice_volume,
-    .audio_codec_get_volume = ics43434_adc_get_voice_volume,
-    .audio_hal_lock = NULL,
-    .handle = NULL,
+audio_hal_func_t AUDIO_CODEC_PCM5102_DEFAULT_HANDLE = {
+    .audio_codec_initialize = pcm5102_init,
+    .audio_codec_deinitialize = pcm5102_deinit,
+    .audio_codec_ctrl = pcm5102_ctrl_state,
+    .audio_codec_config_iface = pcm5102_config_i2s,
+    .audio_codec_set_mute = pcm5102_set_voice_mute,
+    .audio_codec_set_volume = pcm5102_set_voice_volume,
+    .audio_codec_get_volume = pcm5102_get_voice_volume,
 };
 
-esp_err_t ics43434_adc_init(audio_hal_codec_config_t *codec_cfg)
+bool pcm5102_initialized()
+{
+    return codec_init_flag;
+}
+
+esp_err_t pcm5102_init(audio_hal_codec_config_t *cfg)
+{
+    ESP_LOGI(TAG, "pcm5102 init");
+    return ESP_OK;
+}
+
+esp_err_t pcm5102_deinit(void)
 {
     return ESP_OK;
 }
 
-esp_err_t ics43434_adc_deinit(void)
+esp_err_t pcm5102_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state)
 {
     return ESP_OK;
 }
 
-esp_err_t ics43434_adc_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state)
+esp_err_t pcm5102_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t *iface)
 {
     return ESP_OK;
 }
 
-esp_err_t ics43434_adc_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t *iface)
+esp_err_t pcm5102_set_voice_mute(bool mute)
 {
     return ESP_OK;
 }
 
-
-esp_err_t ics43434_adc_set_voice_volume(int volume)
+esp_err_t pcm5102_set_voice_volume(int volume)
 {
     return ESP_OK;
 }
 
-esp_err_t ics43434_adc_get_voice_volume(int *volume)
+esp_err_t pcm5102_get_voice_volume(int *volume)
 {
     return ESP_OK;
 }
